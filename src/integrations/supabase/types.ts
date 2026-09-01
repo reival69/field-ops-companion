@@ -14,16 +14,193 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          active: boolean
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          full_name?: string
+          id: string
+          phone?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      work_order_photos: {
+        Row: {
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["photo_kind"]
+          storage_path: string
+          uploaded_by: string | null
+          work_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["photo_kind"]
+          storage_path: string
+          uploaded_by?: string | null
+          work_order_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["photo_kind"]
+          storage_path?: string
+          uploaded_by?: string | null
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_photos_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_status_events: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          note: string | null
+          status: Database["public"]["Enums"]["work_order_status"]
+          work_order_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          status: Database["public"]["Enums"]["work_order_status"]
+          work_order_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          status?: Database["public"]["Enums"]["work_order_status"]
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_status_events_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_orders: {
+        Row: {
+          address: string
+          assigned_to: string | null
+          client_name: string
+          closing_note: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          finished_at: string | null
+          id: string
+          priority: Database["public"]["Enums"]["work_order_priority"]
+          scheduled_at: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["work_order_status"]
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          assigned_to?: string | null
+          client_name: string
+          closing_note?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          finished_at?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["work_order_priority"]
+          scheduled_at?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["work_order_status"]
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          assigned_to?: string | null
+          client_name?: string
+          closing_note?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          finished_at?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["work_order_priority"]
+          scheduled_at?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["work_order_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "operario"
+      photo_kind: "antes" | "despues"
+      work_order_priority: "baja" | "media" | "alta"
+      work_order_status: "pendiente" | "en_curso" | "pausada" | "finalizada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +327,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "operario"],
+      photo_kind: ["antes", "despues"],
+      work_order_priority: ["baja", "media", "alta"],
+      work_order_status: ["pendiente", "en_curso", "pausada", "finalizada"],
+    },
   },
 } as const
