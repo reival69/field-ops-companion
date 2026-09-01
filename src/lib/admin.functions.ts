@@ -2,10 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { WorkOrderStatus } from "./orders.functions";
 
-type AuthedContext = { supabase: ReturnType<typeof unusedTypeHelper>; userId: string };
-function unusedTypeHelper() {
-  return null as never;
-}
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 
 async function assertAdmin(context: { supabase: any; userId: string }): Promise<void> {
   const { data, error } = await context.supabase.rpc("has_role", {
