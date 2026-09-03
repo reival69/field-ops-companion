@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
+import { Route as AuthenticatedAdminOperariosRouteImport } from './routes/_authenticated/admin.operarios'
 import { Route as AuthenticatedOrdenIdRouteImport } from './routes/_authenticated/orden.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -40,6 +41,12 @@ const AuthenticatedJornadaRoute = AuthenticatedJornadaRouteImport.update({
   path: '/jornada',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminOperariosRoute =
+  AuthenticatedAdminOperariosRouteImport.update({
+    id: '/operarios',
+    path: '/operarios',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedOrdenIdRoute = AuthenticatedOrdenIdRouteImport.update({
   id: '/orden/$id',
   path: '/orden/$id',
@@ -49,15 +56,17 @@ const AuthenticatedOrdenIdRoute = AuthenticatedOrdenIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/admin/operarios': typeof AuthenticatedAdminOperariosRoute
   '/orden/$id': typeof AuthenticatedOrdenIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/admin/operarios': typeof AuthenticatedAdminOperariosRoute
   '/orden/$id': typeof AuthenticatedOrdenIdRoute
 }
 export interface FileRoutesById {
@@ -65,15 +74,17 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
+  '/_authenticated/admin/operarios': typeof AuthenticatedAdminOperariosRoute
   '/_authenticated/orden/$id': typeof AuthenticatedOrdenIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/admin' | '/jornada' | '/orden/$id'
+  fullPaths:
+    '/' | '/auth' | '/admin' | '/jornada' | '/admin/operarios' | '/orden/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/admin' | '/jornada' | '/orden/$id'
+  to: '/' | '/auth' | '/admin' | '/jornada' | '/admin/operarios' | '/orden/$id'
   id:
     | '__root__'
     | '/'
@@ -81,6 +92,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/admin'
     | '/_authenticated/jornada'
+    | '/_authenticated/admin/operarios'
     | '/_authenticated/orden/$id'
   fileRoutesById: FileRoutesById
 }
@@ -127,6 +139,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJornadaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/operarios': {
+      id: '/_authenticated/admin/operarios'
+      path: '/operarios'
+      fullPath: '/admin/operarios'
+      preLoaderRoute: typeof AuthenticatedAdminOperariosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/orden/$id': {
       id: '/_authenticated/orden/$id'
       path: '/orden/$id'
@@ -137,14 +156,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminOperariosRoute: typeof AuthenticatedAdminOperariosRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminOperariosRoute: AuthenticatedAdminOperariosRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedJornadaRoute: typeof AuthenticatedJornadaRoute
   AuthenticatedOrdenIdRoute: typeof AuthenticatedOrdenIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedJornadaRoute: AuthenticatedJornadaRoute,
   AuthenticatedOrdenIdRoute: AuthenticatedOrdenIdRoute,
 }
