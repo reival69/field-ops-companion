@@ -190,7 +190,7 @@ function CreateOperarioDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="op-phone">Teléfono</Label>
-            <Input id="id-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <Input id="op-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
           <Button type="submit" className="w-full" disabled={pending}>
             {pending ? "Creando…" : "Crear operario"}
