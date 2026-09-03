@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ClipboardCheck, Camera, MapPin, PlayCircle, Smartphone, ShieldCheck } from "lucide-react";
-import iconUrl from "../../public/icon-512.png?url";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -60,7 +59,7 @@ function Landing() {
     <div className="min-h-screen bg-background">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-6">
         <div className="flex items-center gap-3">
-          <img src={iconUrl} alt="" width={40} height={40} className="size-10 rounded-lg" />
+          <img src="/icon-512.png" alt="" width={40} height={40} className="size-10 rounded-lg" />
           <span className="font-display text-lg font-bold tracking-tight">Panel del Operario</span>
         </div>
         <Link

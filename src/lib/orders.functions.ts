@@ -124,11 +124,16 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string; status: WorkOrderStatus; note?: string }) => data)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const patch: Record<string, unknown> = { status: data.status };
-    if (data.status === "en_curso") patch['started_at'] = new Date().toISOString();
+    const patch: {
+      status: WorkOrderStatus;
+      started_at?: string;
+      finished_at?: string;
+      closing_note?: string;
+    } = { status: data.status };
+    if (data.status === "en_curso") patch.started_at = new Date().toISOString();
     if (data.status === "finalizada") {
-      patch['finished_at'] = new Date().toISOString();
-      if (data.note) patch['closing_note'] = data.note;
+      patch.finished_at = new Date().toISOString();
+      if (data.note) patch.closing_note = data.note;
     }
 
     const { error } = await supabase.from("work_orders").update(patch).eq("id", data.id);

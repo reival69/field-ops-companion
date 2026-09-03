@@ -12,7 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
+import { Route as AuthenticatedAdminOperariosRouteImport } from './routes/_authenticated/admin.operarios'
+import { Route as AuthenticatedOrdenIdRouteImport } from './routes/_authenticated/orden.$id'
+import { Route as AuthenticatedAdminOrdenIdRouteImport } from './routes/_authenticated/admin.orden.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +32,92 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedJornadaRoute = AuthenticatedJornadaRouteImport.update({
   id: '/jornada',
   path: '/jornada',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminOperariosRoute =
+  AuthenticatedAdminOperariosRouteImport.update({
+    id: '/operarios',
+    path: '/operarios',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedOrdenIdRoute = AuthenticatedOrdenIdRouteImport.update({
+  id: '/orden/$id',
+  path: '/orden/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminOrdenIdRoute =
+  AuthenticatedAdminOrdenIdRouteImport.update({
+    id: '/orden/$id',
+    path: '/orden/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/admin/operarios': typeof AuthenticatedAdminOperariosRoute
+  '/orden/$id': typeof AuthenticatedOrdenIdRoute
+  '/admin/orden/$id': typeof AuthenticatedAdminOrdenIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/admin/operarios': typeof AuthenticatedAdminOperariosRoute
+  '/orden/$id': typeof AuthenticatedOrdenIdRoute
+  '/admin/orden/$id': typeof AuthenticatedAdminOrdenIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
+  '/_authenticated/admin/operarios': typeof AuthenticatedAdminOperariosRoute
+  '/_authenticated/orden/$id': typeof AuthenticatedOrdenIdRoute
+  '/_authenticated/admin/orden/$id': typeof AuthenticatedAdminOrdenIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/jornada'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/admin'
+    | '/jornada'
+    | '/admin/operarios'
+    | '/orden/$id'
+    | '/admin/orden/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/jornada'
-  id: '__root__' | '/' | '/_authenticated' | '/auth' | '/_authenticated/jornada'
+  to:
+    | '/'
+    | '/auth'
+    | '/admin'
+    | '/jornada'
+    | '/admin/operarios'
+    | '/orden/$id'
+    | '/admin/orden/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/admin'
+    | '/_authenticated/jornada'
+    | '/_authenticated/admin/operarios'
+    | '/_authenticated/orden/$id'
+    | '/_authenticated/admin/orden/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -88,6 +149,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/jornada': {
       id: '/_authenticated/jornada'
       path: '/jornada'
@@ -95,15 +163,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJornadaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/operarios': {
+      id: '/_authenticated/admin/operarios'
+      path: '/operarios'
+      fullPath: '/admin/operarios'
+      preLoaderRoute: typeof AuthenticatedAdminOperariosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/orden/$id': {
+      id: '/_authenticated/orden/$id'
+      path: '/orden/$id'
+      fullPath: '/orden/$id'
+      preLoaderRoute: typeof AuthenticatedOrdenIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/orden/$id': {
+      id: '/_authenticated/admin/orden/$id'
+      path: '/orden/$id'
+      fullPath: '/admin/orden/$id'
+      preLoaderRoute: typeof AuthenticatedAdminOrdenIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminOperariosRoute: typeof AuthenticatedAdminOperariosRoute
+  AuthenticatedAdminOrdenIdRoute: typeof AuthenticatedAdminOrdenIdRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminOperariosRoute: AuthenticatedAdminOperariosRoute,
+  AuthenticatedAdminOrdenIdRoute: AuthenticatedAdminOrdenIdRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedJornadaRoute: typeof AuthenticatedJornadaRoute
+  AuthenticatedOrdenIdRoute: typeof AuthenticatedOrdenIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedJornadaRoute: AuthenticatedJornadaRoute,
+  AuthenticatedOrdenIdRoute: AuthenticatedOrdenIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
