@@ -146,7 +146,7 @@ function CreateOperarioDialog({
     event.preventDefault();
     setPending(true);
     try {
-      await onCreate({ email, password, fullName, phone: phone || undefined });
+      await onCreate({ email, password, fullName, ...(phone ? { phone } : {}) });
       reset();
       setOpen(false);
     } catch (error) {
