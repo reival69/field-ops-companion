@@ -106,7 +106,8 @@ function AdminOrdersPage() {
         <div>
           <h1 className="text-2xl font-bold">Órdenes de trabajo</h1>
           <p className="text-sm text-muted-foreground">
-            {orders.length} en total · {counts[0].count} pendientes · {counts[1].count} en curso
+            {orders.length} en total · {orders.filter((o) => o.status === "pendiente").length} pendientes ·{" "}
+            {orders.filter((o) => o.status === "en_curso").length} en curso
           </p>
         </div>
         <CreateOrderDialog
