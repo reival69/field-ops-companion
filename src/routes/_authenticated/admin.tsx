@@ -267,7 +267,7 @@ function CreateOrderDialog({
       await onCreate({
         clientName,
         address,
-        contactPhone: contactPhone || undefined,
+        ...(contactPhone ? { contactPhone } : {}),
         description,
         priority,
         scheduledAt: new Date(scheduledAt).toISOString(),
