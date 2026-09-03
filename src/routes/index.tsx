@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ClipboardCheck, Camera, MapPin, PlayCircle, Smartphone, ShieldCheck } from "lucide-react";
-import iconUrl from "../../public/icon-512.png?url";
 
 export const Route = createFileRoute("/")({
   head: () => ({
