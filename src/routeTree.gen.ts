@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
+import { Route as AuthenticatedOrdenIdRouteImport } from './routes/_authenticated/orden.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -33,16 +34,23 @@ const AuthenticatedJornadaRoute = AuthenticatedJornadaRouteImport.update({
   path: '/jornada',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOrdenIdRoute = AuthenticatedOrdenIdRouteImport.update({
+  id: '/orden/$id',
+  path: '/orden/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/orden/$id': typeof AuthenticatedOrdenIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/orden/$id': typeof AuthenticatedOrdenIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -50,13 +58,20 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
+  '/_authenticated/orden/$id': typeof AuthenticatedOrdenIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/jornada'
+  fullPaths: '/' | '/auth' | '/jornada' | '/orden/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/jornada'
-  id: '__root__' | '/' | '/_authenticated' | '/auth' | '/_authenticated/jornada'
+  to: '/' | '/auth' | '/jornada' | '/orden/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/jornada'
+    | '/_authenticated/orden/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -95,15 +110,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJornadaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/orden/$id': {
+      id: '/_authenticated/orden/$id'
+      path: '/orden/$id'
+      fullPath: '/orden/$id'
+      preLoaderRoute: typeof AuthenticatedOrdenIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedJornadaRoute: typeof AuthenticatedJornadaRoute
+  AuthenticatedOrdenIdRoute: typeof AuthenticatedOrdenIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedJornadaRoute: AuthenticatedJornadaRoute,
+  AuthenticatedOrdenIdRoute: AuthenticatedOrdenIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
