@@ -6,10 +6,12 @@ import type { WorkOrderStatus } from "./orders.functions";
 
 
 async function assertAdmin(context: { supabase: any; userId: string }): Promise<void> {
-  const { data, error } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
+  const { data, error } = await context.supabase
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", context.userId)
+    .eq("role", "admin")
+    .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Solo los administradores pueden hacer esto");
 }
