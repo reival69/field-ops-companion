@@ -55,6 +55,10 @@ export function formatDay(value: string): string {
   });
 }
 
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
+}
+
 export function mapsUrl(address: string): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}&travelmode=driving`;
 }

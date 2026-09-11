@@ -136,6 +136,7 @@ export type Database = {
           client_name: string
           closing_note: string | null
           contact_phone: string | null
+          cost: number | null
           created_at: string
           created_by: string | null
           description: string
@@ -153,6 +154,7 @@ export type Database = {
           client_name: string
           closing_note?: string | null
           contact_phone?: string | null
+          cost?: number | null
           created_at?: string
           created_by?: string | null
           description: string
@@ -170,6 +172,7 @@ export type Database = {
           client_name?: string
           closing_note?: string | null
           contact_phone?: string | null
+          cost?: number | null
           created_at?: string
           created_by?: string | null
           description?: string

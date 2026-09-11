@@ -16,6 +16,7 @@ import {
   PRIORITY_LABEL,
   STATUS_CLASS,
   STATUS_LABEL,
+  formatCurrency,
   formatDateTime,
   type Priority,
 } from "@/lib/workorder-ui";
@@ -144,6 +145,7 @@ function AdminOrdersPage() {
                 <th className="px-4 py-3 font-medium">Estado</th>
                 <th className="px-4 py-3 font-medium">Prioridad</th>
                 <th className="px-4 py-3 font-medium">Operario</th>
+                <th className="px-4 py-3 font-medium">Coste</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -199,6 +201,9 @@ function AdminOrdersPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {order.cost != null ? formatCurrency(order.cost) : "—"}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
