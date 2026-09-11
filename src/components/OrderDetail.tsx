@@ -149,7 +149,10 @@ export function OrderDetail({ orderId }: { orderId: string }) {
             Prioridad {PRIORITY_LABEL[order.priority as Priority]}
           </span>
         </div>
-        <h1 className="mt-3 text-2xl font-bold">{order.client_name}</h1>
+        <h1 className="mt-3 text-2xl font-bold">
+          {order.client_name}
+          {order.unit ? ` · ${order.unit}` : ""}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">{order.address}</p>
         <p className="mt-1 text-sm text-muted-foreground">
           Programada: {formatDateTime(order.scheduled_at)}

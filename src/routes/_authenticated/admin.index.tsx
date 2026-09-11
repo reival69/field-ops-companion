@@ -159,6 +159,7 @@ function AdminOrdersPage() {
                       className="font-semibold hover:underline"
                     >
                       {order.client_name}
+                      {order.unit ? ` · ${order.unit}` : ""}
                     </Link>
                     <p className="text-xs text-muted-foreground">{order.address}</p>
                   </td>
@@ -238,6 +239,7 @@ function CreateOrderDialog({
   onCreate: (payload: {
     clientName: string;
     address: string;
+    unit?: string;
     contactPhone?: string;
     description: string;
     priority: "baja" | "media" | "alta";
@@ -248,6 +250,7 @@ function CreateOrderDialog({
   const [open, setOpen] = useState(false);
   const [clientName, setClientName] = useState("");
   const [address, setAddress] = useState("");
+  const [unit, setUnit] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"baja" | "media" | "alta">("media");
@@ -258,6 +261,7 @@ function CreateOrderDialog({
   const reset = () => {
     setClientName("");
     setAddress("");
+    setUnit("");
     setContactPhone("");
     setDescription("");
     setPriority("media");
@@ -272,6 +276,7 @@ function CreateOrderDialog({
       await onCreate({
         clientName,
         address,
+        ...(unit.trim() ? { unit: unit.trim() } : {}),
         ...(contactPhone ? { contactPhone } : {}),
         description,
         priority,
@@ -307,6 +312,15 @@ function CreateOrderDialog({
           <div className="space-y-2">
             <Label htmlFor="address">Dirección</Label>
             <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="unit">Piso / unidad (opcional)</Label>
+            <Input
+              id="unit"
+              placeholder="3ºA"
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

@@ -146,6 +146,7 @@ export type Database = {
           scheduled_at: string
           started_at: string | null
           status: Database["public"]["Enums"]["work_order_status"]
+          unit: string | null
           updated_at: string
         }
         Insert: {
@@ -164,6 +165,7 @@ export type Database = {
           scheduled_at?: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["work_order_status"]
+          unit?: string | null
           updated_at?: string
         }
         Update: {
@@ -182,6 +184,7 @@ export type Database = {
           scheduled_at?: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["work_order_status"]
+          unit?: string | null
           updated_at?: string
         }
         Relationships: []

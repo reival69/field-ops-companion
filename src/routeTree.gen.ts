@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminEstadisticasRouteImport } from './routes/_authenticated/admin.estadisticas'
 import { Route as AuthenticatedAdminOperariosRouteImport } from './routes/_authenticated/admin.operarios'
 import { Route as AuthenticatedOrdenIdRouteImport } from './routes/_authenticated/orden.$id'
 import { Route as AuthenticatedAdminOrdenIdRouteImport } from './routes/_authenticated/admin.orden.$id'
@@ -48,6 +49,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminEstadisticasRoute =
+  AuthenticatedAdminEstadisticasRouteImport.update({
+    id: '/estadisticas',
+    path: '/estadisticas',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminOperariosRoute =
   AuthenticatedAdminOperariosRouteImport.update({
     id: '/operarios',
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/admin/estadisticas': typeof AuthenticatedAdminEstadisticasRoute
   '/admin/operarios': typeof AuthenticatedAdminOperariosRoute
   '/orden/$id': typeof AuthenticatedOrdenIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -80,6 +88,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/admin/estadisticas': typeof AuthenticatedAdminEstadisticasRoute
   '/admin/operarios': typeof AuthenticatedAdminOperariosRoute
   '/orden/$id': typeof AuthenticatedOrdenIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -92,6 +101,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
+  '/_authenticated/admin/estadisticas': typeof AuthenticatedAdminEstadisticasRoute
   '/_authenticated/admin/operarios': typeof AuthenticatedAdminOperariosRoute
   '/_authenticated/orden/$id': typeof AuthenticatedOrdenIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/jornada'
+    | '/admin/estadisticas'
     | '/admin/operarios'
     | '/orden/$id'
     | '/admin/'
@@ -113,6 +124,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/jornada'
+    | '/admin/estadisticas'
     | '/admin/operarios'
     | '/orden/$id'
     | '/admin'
@@ -124,6 +136,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/admin'
     | '/_authenticated/jornada'
+    | '/_authenticated/admin/estadisticas'
     | '/_authenticated/admin/operarios'
     | '/_authenticated/orden/$id'
     | '/_authenticated/admin/'
@@ -180,6 +193,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/estadisticas': {
+      id: '/_authenticated/admin/estadisticas'
+      path: '/estadisticas'
+      fullPath: '/admin/estadisticas'
+      preLoaderRoute: typeof AuthenticatedAdminEstadisticasRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/operarios': {
       id: '/_authenticated/admin/operarios'
       path: '/operarios'
@@ -205,12 +225,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminEstadisticasRoute: typeof AuthenticatedAdminEstadisticasRoute
   AuthenticatedAdminOperariosRoute: typeof AuthenticatedAdminOperariosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminOrdenIdRoute: typeof AuthenticatedAdminOrdenIdRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminEstadisticasRoute: AuthenticatedAdminEstadisticasRoute,
   AuthenticatedAdminOperariosRoute: AuthenticatedAdminOperariosRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminOrdenIdRoute: AuthenticatedAdminOrdenIdRoute,
