@@ -204,6 +204,51 @@ export const setOperarioActive = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const updateOperario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string; fullName: string; phone?: string }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase
+      .from("profiles")
+      .update({ full_name: data.fullName, phone: data.phone ?? null })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const updateOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (data: {
+      id: string;
+      clientName: string;
+      address: string;
+      unit?: string;
+      contactPhone?: string;
+      description: string;
+      priority: "baja" | "media" | "alta";
+      scheduledAt: string;
+    }) => data,
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase
+      .from("work_orders")
+      .update({
+        client_name: data.clientName,
+        address: data.address,
+        unit: data.unit ?? null,
+        contact_phone: data.contactPhone ?? null,
+        description: data.description,
+        priority: data.priority,
+        scheduled_at: data.scheduledAt,
+      })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const adminUpdateStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { id: string; status: WorkOrderStatus }) => data)
