@@ -128,6 +128,99 @@ export const deleteOrder = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const listAdmins = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+
+    const { data: roles, error } = await context.supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "admin");
+    if (error) throw new Error(error.message);
+
+    const adminIds = (roles ?? []).map((r) => r.user_id);
+    if (adminIds.length === 0) return [];
+
+    const { data: profiles, error: profilesError } = await context.supabase
+      .from("profiles")
+      .select("id, full_name, created_at")
+      .in("id", adminIds);
+    if (profilesError) throw new Error(profilesError.message);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: userList } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
+    const emails = new Map((userList?.users ?? []).map((u) => [u.id, u.email ?? ""]));
+    const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+
+    return adminIds
+      .map((id) => ({
+        id,
+        full_name: profileMap.get(id)?.full_name ?? "",
+        email: emails.get(id) ?? "",
+        created_at: profileMap.get(id)?.created_at ?? null,
+        is_self: id === context.userId,
+      }))
+      .sort((a, b) => (a.created_at ?? "").localeCompare(b.created_at ?? ""));
+  });
+
+export const createAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { email: string; password: string; fullName: string }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    if (data.password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+    });
+    if (error || !created.user) throw new Error(error?.message ?? "No se pudo crear el administrador");
+
+    await supabaseAdmin.from("profiles").upsert({ id: created.user.id, full_name: data.fullName });
+    const { error: roleError } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: created.user.id, role: "admin" });
+    if (roleError) throw new Error(roleError.message);
+
+    return { id: created.user.id };
+  });
+
+export const deleteAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    if (data.id === context.userId) {
+      throw new Error("No puedes eliminar tu propia cuenta de administrador");
+    }
+
+    const { count, error: countError } = await context.supabase
+      .from("user_roles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "admin");
+    if (countError) throw new Error(countError.message);
+    if ((count ?? 0) <= 1) throw new Error("Debe quedar al menos un administrador");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteOperario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const listOperarios = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

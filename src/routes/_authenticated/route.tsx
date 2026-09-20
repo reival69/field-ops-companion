@@ -59,6 +59,13 @@ function AuthenticatedLayout() {
                 >
                   Operarios
                 </Link>
+                <Link
+                  to="/admin/administradores"
+                  activeProps={{ className: "bg-accent" }}
+                  className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+                >
+                  Administradores
+                </Link>
               </>
             )}
             {role === "operario" && (

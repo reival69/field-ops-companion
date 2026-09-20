@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as RestablecerContrasenaRouteImport } from './routes/restablecer-contrasena'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminAdministradoresRouteImport } from './routes/_authenticated/admin.administradores'
 import { Route as AuthenticatedAdminOperariosRouteImport } from './routes/_authenticated/admin.operarios'
 import { Route as AuthenticatedOrdenIdRouteImport } from './routes/_authenticated/orden.$id'
 import { Route as AuthenticatedAdminOrdenIdRouteImport } from './routes/_authenticated/admin.orden.$id'
@@ -33,6 +35,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RestablecerContrasenaRoute = RestablecerContrasenaRouteImport.update({
+  id: '/restablecer-contrasena',
+  path: '/restablecer-contrasena',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -48,6 +55,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminAdministradoresRoute =
+  AuthenticatedAdminAdministradoresRouteImport.update({
+    id: '/administradores',
+    path: '/administradores',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminOperariosRoute =
   AuthenticatedAdminOperariosRouteImport.update({
     id: '/operarios',
@@ -69,8 +82,10 @@ const AuthenticatedAdminOrdenIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/restablecer-contrasena': typeof RestablecerContrasenaRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/admin/administradores': typeof AuthenticatedAdminAdministradoresRoute
   '/admin/operarios': typeof AuthenticatedAdminOperariosRoute
   '/orden/$id': typeof AuthenticatedOrdenIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -79,7 +94,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/restablecer-contrasena': typeof RestablecerContrasenaRoute
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/admin/administradores': typeof AuthenticatedAdminAdministradoresRoute
   '/admin/operarios': typeof AuthenticatedAdminOperariosRoute
   '/orden/$id': typeof AuthenticatedOrdenIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -90,8 +107,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/restablecer-contrasena': typeof RestablecerContrasenaRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
+  '/_authenticated/admin/administradores': typeof AuthenticatedAdminAdministradoresRoute
   '/_authenticated/admin/operarios': typeof AuthenticatedAdminOperariosRoute
   '/_authenticated/orden/$id': typeof AuthenticatedOrdenIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -102,8 +121,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/restablecer-contrasena'
     | '/admin'
     | '/jornada'
+    | '/admin/administradores'
     | '/admin/operarios'
     | '/orden/$id'
     | '/admin/'
@@ -112,7 +133,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/restablecer-contrasena'
     | '/jornada'
+    | '/admin/administradores'
     | '/admin/operarios'
     | '/orden/$id'
     | '/admin'
@@ -122,8 +145,10 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/restablecer-contrasena'
     | '/_authenticated/admin'
     | '/_authenticated/jornada'
+    | '/_authenticated/admin/administradores'
     | '/_authenticated/admin/operarios'
     | '/_authenticated/orden/$id'
     | '/_authenticated/admin/'
@@ -134,6 +159,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  RestablecerContrasenaRoute: typeof RestablecerContrasenaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -159,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/restablecer-contrasena': {
+      id: '/restablecer-contrasena'
+      path: '/restablecer-contrasena'
+      fullPath: '/restablecer-contrasena'
+      preLoaderRoute: typeof RestablecerContrasenaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -178,6 +211,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/administradores': {
+      id: '/_authenticated/admin/administradores'
+      path: '/administradores'
+      fullPath: '/admin/administradores'
+      preLoaderRoute: typeof AuthenticatedAdminAdministradoresRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/operarios': {
@@ -205,12 +245,15 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAdministradoresRoute: typeof AuthenticatedAdminAdministradoresRoute
   AuthenticatedAdminOperariosRoute: typeof AuthenticatedAdminOperariosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminOrdenIdRoute: typeof AuthenticatedAdminOrdenIdRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAdministradoresRoute:
+    AuthenticatedAdminAdministradoresRoute,
   AuthenticatedAdminOperariosRoute: AuthenticatedAdminOperariosRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminOrdenIdRoute: AuthenticatedAdminOrdenIdRoute,
@@ -238,6 +281,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  RestablecerContrasenaRoute: RestablecerContrasenaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
