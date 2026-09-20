@@ -4,7 +4,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Pencil, Plus } from "lucide-react";
-import { createOperario, listOperarios, setOperarioActive, updateOperario } from "@/lib/admin.functions";
+import {
+  createOperario,
+  deleteOperario,
+  listOperarios,
+  setOperarioActive,
+  updateOperario,
+} from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +28,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/operarios")({
   head: () => ({
@@ -43,6 +60,7 @@ function AdminOperariosPage() {
   const fetchList = useServerFn(listOperarios);
   const setActive = useServerFn(setOperarioActive);
   const create = useServerFn(createOperario);
+  const remove = useServerFn(deleteOperario);
   const update = useServerFn(updateOperario);
 
   const listQuery = useQuery({ queryKey: ["operarios"], queryFn: () => fetchList() });
@@ -53,6 +71,15 @@ function AdminOperariosPage() {
       setActive({ data: { id, active } }),
     onSuccess: () => {
       toast.success("Operario actualizado");
+      void queryClient.invalidateQueries({ queryKey: ["operarios"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => remove({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Operario eliminado");
       void queryClient.invalidateQueries({ queryKey: ["operarios"] });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -117,6 +144,27 @@ function AdminOperariosPage() {
                 >
                   {o.active ? "Desactivar" : "Activar"}
                 </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" disabled={deleteMutation.isPending}>
+                      Eliminar
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Eliminar a {o.full_name}?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción no se puede deshacer. Sus órdenes asignadas quedarán sin operario.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deleteMutation.mutate(o.id)}>
+                        Eliminar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </li>
           ))}

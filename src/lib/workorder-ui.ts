@@ -62,3 +62,35 @@ export function formatCurrency(value: number): string {
 export function mapsUrl(address: string): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}&travelmode=driving`;
 }
+
+export function monthKey(value: string): string {
+  const date = new Date(value);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export function monthLabel(key: string): string {
+  const parts = key.split("-");
+  const year = Number(parts[0]);
+  const month = Number(parts[1]);
+  const label = new Date(year, month - 1, 1).toLocaleDateString("es-ES", {
+    month: "long",
+    year: "numeric",
+  });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+export function groupByMonth<T extends { scheduled_at: string }>(
+  items: T[],
+): { key: string; label: string; items: T[] }[] {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const key = monthKey(item.scheduled_at);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(item);
+  }
+  return Array.from(groups.entries()).map(([key, groupItems]) => ({
+    key,
+    label: monthLabel(key),
+    items: groupItems,
+  }));
+}

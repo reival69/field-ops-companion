@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import {
@@ -19,6 +19,7 @@ import {
   STATUS_LABEL,
   formatCurrency,
   formatDateTime,
+  groupByMonth,
   type Priority,
 } from "@/lib/workorder-ui";
 import type { WorkOrderStatus } from "@/lib/orders.functions";
@@ -95,13 +96,31 @@ function AdminOrdersPage() {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  const orders = ordersQuery.data ?? [];
+  const orders = useMemo(() => ordersQuery.data ?? [], [ordersQuery.data]);
   const operarios = (operariosQuery.data ?? []).filter((o) => o.active);
 
+  // Stats always cover every order, regardless of how the list below is grouped by month.
   const counts = STATUS_ORDER.map((status) => ({
     status,
     count: orders.filter((o) => (o.status as WorkOrderStatus) === status).length,
   }));
+
+  const previousClients = useMemo<PreviousClient[]>(() => {
+    const map = new Map<string, PreviousClient>();
+    for (const order of orders) {
+      const key = `${order.client_name.trim().toLowerCase()}|${order.address.trim().toLowerCase()}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          clientName: order.client_name,
+          address: order.address,
+          contactPhone: order.contact_phone ?? "",
+        });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.clientName.localeCompare(b.clientName, "es"));
+  }, [orders]);
+
+  const monthGroups = groupByMonth(orders);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
@@ -115,6 +134,7 @@ function AdminOrdersPage() {
         </div>
         <CreateOrderDialog
           operarios={operarios}
+          previousClients={previousClients}
           onCreate={async (payload) => {
             const { id } = await create({ data: payload });
             invalidate();
@@ -138,116 +158,130 @@ function AdminOrdersPage() {
       ) : orders.length === 0 ? (
         <p className="mt-8 text-center text-muted-foreground">No hay órdenes. Crea la primera.</p>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-xl border border-border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-left text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 font-medium">Cliente</th>
-                <th className="px-4 py-3 font-medium">Fecha</th>
-                <th className="px-4 py-3 font-medium">Estado</th>
-                <th className="px-4 py-3 font-medium">Prioridad</th>
-                <th className="px-4 py-3 font-medium">Operario</th>
-                <th className="px-4 py-3 font-medium">Coste</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {orders.map((order) => (
-                <tr key={order.id} className="hover:bg-accent/40">
-                  <td className="px-4 py-3">
-                    <Link
-                      to="/admin/orden/$id"
-                      params={{ id: order.id }}
-                      className="font-semibold hover:underline"
-                    >
-                      {order.client_name}
-                      {order.unit ? ` · ${order.unit}` : ""}
-                    </Link>
-                    <p className="text-xs text-muted-foreground">{order.address}</p>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {formatDateTime(order.scheduled_at)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded px-2 py-0.5 text-xs font-semibold ${STATUS_CLASS[order.status as WorkOrderStatus]}`}
-                    >
-                      {STATUS_LABEL[order.status as WorkOrderStatus]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded px-2 py-0.5 text-xs font-semibold ${PRIORITY_CLASS[order.priority as Priority]}`}
-                    >
-                      {PRIORITY_LABEL[order.priority as Priority]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Select
-                      value={order.assigned_to ?? "__none__"}
-                      onValueChange={(value) =>
-                        assignMutation.mutate({
-                          id: order.id,
-                          assignedTo: value === "__none__" ? null : value,
-                        })
-                      }
-                    >
-                      <SelectTrigger className="h-8 w-40 text-xs">
-                        <SelectValue placeholder="Sin asignar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">Sin asignar</SelectItem>
-                        {operarios.map((o) => (
-                          <SelectItem key={o.id} value={o.id}>
-                            {o.full_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {order.cost != null ? formatCurrency(order.cost) : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-3">
-                      <EditOrderDialog
-                        order={order}
-                        onSave={async (payload) => {
-                          await update({ data: { id: order.id, ...payload } });
-                          invalidate();
-                          toast.success("Orden actualizada");
-                        }}
-                      />
-                      <button
-                        type="button"
-                        aria-label="Eliminar orden"
-                        className="text-muted-foreground hover:text-destructive"
-                        onClick={() => {
-                          if (confirm(`¿Eliminar la orden de ${order.client_name}?`))
-                            deleteMutation.mutate(order.id);
-                        }}
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-6 space-y-8">
+          {monthGroups.map((group) => (
+            <div key={group.key}>
+              <h2 className="mb-2 text-sm font-semibold capitalize text-muted-foreground">
+                {group.label} · {group.items.length}{" "}
+                {group.items.length === 1 ? "orden" : "órdenes"}
+              </h2>
+              <div className="overflow-hidden rounded-xl border border-border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 text-left text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Cliente</th>
+                      <th className="px-4 py-3 font-medium">Fecha</th>
+                      <th className="px-4 py-3 font-medium">Estado</th>
+                      <th className="px-4 py-3 font-medium">Prioridad</th>
+                      <th className="px-4 py-3 font-medium">Operario</th>
+                      <th className="px-4 py-3 font-medium">Coste</th>
+                      <th className="px-4 py-3" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {group.items.map((order) => (
+                      <tr key={order.id} className="hover:bg-accent/40">
+                        <td className="px-4 py-3">
+                          <Link
+                            to="/admin/orden/$id"
+                            params={{ id: order.id }}
+                            className="font-semibold hover:underline"
+                          >
+                            {order.client_name}
+                            {order.unit ? ` · ${order.unit}` : ""}
+                          </Link>
+                          <p className="text-xs text-muted-foreground">{order.address}</p>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {formatDateTime(order.scheduled_at)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`rounded px-2 py-0.5 text-xs font-semibold ${STATUS_CLASS[order.status as WorkOrderStatus]}`}
+                          >
+                            {STATUS_LABEL[order.status as WorkOrderStatus]}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`rounded px-2 py-0.5 text-xs font-semibold ${PRIORITY_CLASS[order.priority as Priority]}`}
+                          >
+                            {PRIORITY_LABEL[order.priority as Priority]}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Select
+                            value={order.assigned_to ?? "__none__"}
+                            onValueChange={(value) =>
+                              assignMutation.mutate({
+                                id: order.id,
+                                assignedTo: value === "__none__" ? null : value,
+                              })
+                            }
+                          >
+                            <SelectTrigger className="h-8 w-40 text-xs">
+                              <SelectValue placeholder="Sin asignar" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__">Sin asignar</SelectItem>
+                              {operarios.map((o) => (
+                                <SelectItem key={o.id} value={o.id}>
+                                  {o.full_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {order.cost != null ? formatCurrency(order.cost) : "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-3">
+                            <EditOrderDialog
+                              order={order}
+                              onSave={async (payload) => {
+                                await update({ data: { id: order.id, ...payload } });
+                                invalidate();
+                                toast.success("Orden actualizada");
+                              }}
+                            />
+                            <button
+                              type="button"
+                              aria-label="Eliminar orden"
+                              className="text-muted-foreground hover:text-destructive"
+                              onClick={() => {
+                                if (confirm(`¿Eliminar la orden de ${order.client_name}?`))
+                                  deleteMutation.mutate(order.id);
+                              }}
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </main>
   );
 }
 
+type PreviousClient = { clientName: string; address: string; contactPhone: string };
+
 type OperarioLite = { id: string; full_name: string };
 
 function CreateOrderDialog({
   operarios,
+  previousClients,
   onCreate,
 }: {
   operarios: OperarioLite[];
+  previousClients: PreviousClient[];
   onCreate: (payload: {
     clientName: string;
     address: string;
@@ -260,6 +294,7 @@ function CreateOrderDialog({
   }) => Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<string>("__new__");
   const [clientName, setClientName] = useState("");
   const [address, setAddress] = useState("");
   const [unit, setUnit] = useState("");
@@ -271,6 +306,7 @@ function CreateOrderDialog({
   const [pending, setPending] = useState(false);
 
   const reset = () => {
+    setSelectedClient("__new__");
     setClientName("");
     setAddress("");
     setUnit("");
@@ -279,6 +315,16 @@ function CreateOrderDialog({
     setPriority("media");
     setScheduledAt("");
     setAssignedTo("__none__");
+  };
+
+  const applyClient = (value: string) => {
+    setSelectedClient(value);
+    if (value === "__new__") return;
+    const client = previousClients[Number(value)];
+    if (!client) return;
+    setClientName(client.clientName);
+    setAddress(client.address);
+    setContactPhone(client.contactPhone);
   };
 
   const submit = async (event: React.FormEvent) => {
@@ -317,6 +363,27 @@ function CreateOrderDialog({
           <DialogTitle>Crear orden de trabajo</DialogTitle>
         </DialogHeader>
         <form className="space-y-4" onSubmit={submit}>
+          {previousClients.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="previousClient">Cliente ya registrado</Label>
+              <Select value={selectedClient} onValueChange={applyClient}>
+                <SelectTrigger id="previousClient">
+                  <SelectValue placeholder="Nuevo cliente" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__new__">Nuevo cliente</SelectItem>
+                  {previousClients.map((client, index) => (
+                    <SelectItem key={`${client.clientName}-${client.address}`} value={String(index)}>
+                      {client.clientName} — {client.address}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Elige uno para rellenar sus datos automáticamente, o sigue con "Nuevo cliente".
+              </p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="clientName">Cliente</Label>
             <Input id="clientName" value={clientName} onChange={(e) => setClientName(e.target.value)} required />
