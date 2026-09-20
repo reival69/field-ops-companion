@@ -136,6 +136,7 @@ export type Database = {
           client_name: string
           closing_note: string | null
           contact_phone: string | null
+          cost: number | null
           created_at: string
           created_by: string | null
           description: string
@@ -145,6 +146,7 @@ export type Database = {
           scheduled_at: string
           started_at: string | null
           status: Database["public"]["Enums"]["work_order_status"]
+          unit: string | null
           updated_at: string
         }
         Insert: {
@@ -153,6 +155,7 @@ export type Database = {
           client_name: string
           closing_note?: string | null
           contact_phone?: string | null
+          cost?: number | null
           created_at?: string
           created_by?: string | null
           description: string
@@ -162,6 +165,7 @@ export type Database = {
           scheduled_at?: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["work_order_status"]
+          unit?: string | null
           updated_at?: string
         }
         Update: {
@@ -170,6 +174,7 @@ export type Database = {
           client_name?: string
           closing_note?: string | null
           contact_phone?: string | null
+          cost?: number | null
           created_at?: string
           created_by?: string | null
           description?: string
@@ -179,6 +184,7 @@ export type Database = {
           scheduled_at?: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["work_order_status"]
+          unit?: string | null
           updated_at?: string
         }
         Relationships: []

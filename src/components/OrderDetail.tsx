@@ -20,11 +20,14 @@ import {
   PRIORITY_LABEL,
   STATUS_CLASS,
   STATUS_LABEL,
+  formatCurrency,
   formatDateTime,
   mapsUrl,
   type Priority,
 } from "@/lib/workorder-ui";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 const NEXT_ACTIONS: Record<WorkOrderStatus, WorkOrderStatus[]> = {
@@ -50,6 +53,7 @@ export function OrderDetail({ orderId }: { orderId: string }) {
   const removePhoto = useServerFn(deletePhoto);
 
   const [note, setNote] = useState("");
+  const [cost, setCost] = useState("");
   const [uploadingKind, setUploadingKind] = useState<PhotoKind | null>(null);
   const beforeInput = useRef<HTMLInputElement>(null);
   const afterInput = useRef<HTMLInputElement>(null);
@@ -66,10 +70,18 @@ export function OrderDetail({ orderId }: { orderId: string }) {
   };
 
   const statusMutation = useMutation({
-    mutationFn: (status: WorkOrderStatus) =>
-      setStatus({
-        data: status === "finalizada" && note.trim() ? { id: orderId, status, note: note.trim() } : { id: orderId, status },
-      }),
+    mutationFn: (status: WorkOrderStatus) => {
+      if (status !== "finalizada") return setStatus({ data: { id: orderId, status } });
+      const parsedCost = cost.trim() ? Number(cost) : undefined;
+      return setStatus({
+        data: {
+          id: orderId,
+          status,
+          ...(note.trim() ? { note: note.trim() } : {}),
+          ...(parsedCost !== undefined && !Number.isNaN(parsedCost) ? { cost: parsedCost } : {}),
+        },
+      });
+    },
     onSuccess: (_result, status) => {
       toast.success(`Orden ${STATUS_LABEL[status].toLowerCase()}`);
       invalidate();
@@ -137,7 +149,10 @@ export function OrderDetail({ orderId }: { orderId: string }) {
             Prioridad {PRIORITY_LABEL[order.priority as Priority]}
           </span>
         </div>
-        <h1 className="mt-3 text-2xl font-bold">{order.client_name}</h1>
+        <h1 className="mt-3 text-2xl font-bold">
+          {order.client_name}
+          {order.unit ? ` · ${order.unit}` : ""}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">{order.address}</p>
         <p className="mt-1 text-sm text-muted-foreground">
           Programada: {formatDateTime(order.scheduled_at)}
@@ -173,13 +188,28 @@ export function OrderDetail({ orderId }: { orderId: string }) {
         <section className="rounded-xl border border-border bg-card p-5">
           <h2 className="label-caps text-muted-foreground">Estado del trabajo</h2>
           {actions.includes("finalizada") && (
-            <Textarea
-              className="mt-3"
-              placeholder="Nota de cierre (opcional): qué se ha hecho, materiales, incidencias…"
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              rows={3}
-            />
+            <>
+              <Textarea
+                className="mt-3"
+                placeholder="Nota de cierre (opcional): qué se ha hecho, materiales, incidencias…"
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                rows={3}
+              />
+              <div className="mt-3 space-y-2">
+                <Label htmlFor="cost">Coste de la reparación (opcional)</Label>
+                <Input
+                  id="cost"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00 €"
+                  value={cost}
+                  onChange={(event) => setCost(event.target.value)}
+                />
+              </div>
+            </>
           )}
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {actions.map((action) => (
@@ -198,10 +228,17 @@ export function OrderDetail({ orderId }: { orderId: string }) {
         </section>
       )}
 
-      {order.closing_note && (
+      {(order.closing_note || order.cost != null) && (
         <section className="rounded-xl border border-border bg-card p-5">
-          <h2 className="label-caps text-muted-foreground">Nota de cierre</h2>
-          <p className="mt-2 whitespace-pre-line">{order.closing_note}</p>
+          {order.cost != null && (
+            <p className="text-lg font-bold">Coste: {formatCurrency(order.cost)}</p>
+          )}
+          {order.closing_note && (
+            <>
+              <h2 className="label-caps mt-3 text-muted-foreground">Nota de cierre</h2>
+              <p className="mt-2 whitespace-pre-line">{order.closing_note}</p>
+            </>
+          )}
         </section>
       )}
 

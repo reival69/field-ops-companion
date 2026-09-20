@@ -3,8 +3,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
-import { createOperario, deleteOperario, listOperarios, setOperarioActive } from "@/lib/admin.functions";
+import { Pencil, Plus } from "lucide-react";
+import {
+  createOperario,
+  deleteOperario,
+  listOperarios,
+  setOperarioActive,
+  updateOperario,
+} from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +61,7 @@ function AdminOperariosPage() {
   const setActive = useServerFn(setOperarioActive);
   const create = useServerFn(createOperario);
   const remove = useServerFn(deleteOperario);
+  const update = useServerFn(updateOperario);
 
   const listQuery = useQuery({ queryKey: ["operarios"], queryFn: () => fetchList() });
   const operarios = listQuery.data ?? [];
@@ -117,12 +124,19 @@ function AdminOperariosPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span
-                  className={`rounded px-2 py-0.5 text-xs font-semibold ${
-                    o.active ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"
-                  }`}
+                  className={`rounded px-2 py-0.5 text-xs font-semibold ${o.active ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"
+                    }`}
                 >
                   {o.active ? "Activo" : "Inactivo"}
                 </span>
+                <EditOperarioDialog
+                  operario={o}
+                  onSave={async (payload) => {
+                    await update({ data: { id: o.id, ...payload } });
+                    toast.success("Operario actualizado");
+                    void queryClient.invalidateQueries({ queryKey: ["operarios"] });
+                  }}
+                />
                 <Button
                   variant={o.active ? "secondary" : "default"}
                   size="sm"
@@ -157,6 +171,75 @@ function AdminOperariosPage() {
         </ul>
       )}
     </main>
+  );
+}
+
+function EditOperarioDialog({
+  operario,
+  onSave,
+}: {
+  operario: { full_name: string; phone: string | null };
+  onSave: (payload: { fullName: string; phone?: string }) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [fullName, setFullName] = useState(operario.full_name);
+  const [phone, setPhone] = useState(operario.phone ?? "");
+  const [pending, setPending] = useState(false);
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setPending(true);
+    try {
+      await onSave({ fullName, ...(phone ? { phone } : {}) });
+      setOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Error al actualizar el operario");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (next) {
+          setFullName(operario.full_name);
+          setPhone(operario.phone ?? "");
+        }
+        setOpen(next);
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Pencil className="mr-1.5 size-3.5" />
+          Editar
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Editar operario</DialogTitle>
+        </DialogHeader>
+        <form className="space-y-4" onSubmit={submit}>
+          <div className="space-y-2">
+            <Label htmlFor="edit-op-fullName">Nombre y apellidos</Label>
+            <Input
+              id="edit-op-fullName"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-op-phone">Teléfono</Label>
+            <Input id="edit-op-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          <Button type="submit" className="w-full" disabled={pending}>
+            {pending ? "Guardando…" : "Guardar cambios"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

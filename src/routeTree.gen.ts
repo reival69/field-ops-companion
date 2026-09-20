@@ -17,6 +17,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAdministradoresRouteImport } from './routes/_authenticated/admin.administradores'
+import { Route as AuthenticatedAdminEstadisticasRouteImport } from './routes/_authenticated/admin.estadisticas'
 import { Route as AuthenticatedAdminOperariosRouteImport } from './routes/_authenticated/admin.operarios'
 import { Route as AuthenticatedOrdenIdRouteImport } from './routes/_authenticated/orden.$id'
 import { Route as AuthenticatedAdminOrdenIdRouteImport } from './routes/_authenticated/admin.orden.$id'
@@ -61,6 +62,12 @@ const AuthenticatedAdminAdministradoresRoute =
     path: '/administradores',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminEstadisticasRoute =
+  AuthenticatedAdminEstadisticasRouteImport.update({
+    id: '/estadisticas',
+    path: '/estadisticas',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminOperariosRoute =
   AuthenticatedAdminOperariosRouteImport.update({
     id: '/operarios',
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/jornada': typeof AuthenticatedJornadaRoute
   '/admin/administradores': typeof AuthenticatedAdminAdministradoresRoute
+  '/admin/estadisticas': typeof AuthenticatedAdminEstadisticasRoute
   '/admin/operarios': typeof AuthenticatedAdminOperariosRoute
   '/orden/$id': typeof AuthenticatedOrdenIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -97,6 +105,7 @@ export interface FileRoutesByTo {
   '/restablecer-contrasena': typeof RestablecerContrasenaRoute
   '/jornada': typeof AuthenticatedJornadaRoute
   '/admin/administradores': typeof AuthenticatedAdminAdministradoresRoute
+  '/admin/estadisticas': typeof AuthenticatedAdminEstadisticasRoute
   '/admin/operarios': typeof AuthenticatedAdminOperariosRoute
   '/orden/$id': typeof AuthenticatedOrdenIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -111,6 +120,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
   '/_authenticated/admin/administradores': typeof AuthenticatedAdminAdministradoresRoute
+  '/_authenticated/admin/estadisticas': typeof AuthenticatedAdminEstadisticasRoute
   '/_authenticated/admin/operarios': typeof AuthenticatedAdminOperariosRoute
   '/_authenticated/orden/$id': typeof AuthenticatedOrdenIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/jornada'
     | '/admin/administradores'
+    | '/admin/estadisticas'
     | '/admin/operarios'
     | '/orden/$id'
     | '/admin/'
@@ -136,6 +147,7 @@ export interface FileRouteTypes {
     | '/restablecer-contrasena'
     | '/jornada'
     | '/admin/administradores'
+    | '/admin/estadisticas'
     | '/admin/operarios'
     | '/orden/$id'
     | '/admin'
@@ -149,6 +161,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/jornada'
     | '/_authenticated/admin/administradores'
+    | '/_authenticated/admin/estadisticas'
     | '/_authenticated/admin/operarios'
     | '/_authenticated/orden/$id'
     | '/_authenticated/admin/'
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdministradoresRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/estadisticas': {
+      id: '/_authenticated/admin/estadisticas'
+      path: '/estadisticas'
+      fullPath: '/admin/estadisticas'
+      preLoaderRoute: typeof AuthenticatedAdminEstadisticasRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/operarios': {
       id: '/_authenticated/admin/operarios'
       path: '/operarios'
@@ -246,6 +266,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAdministradoresRoute: typeof AuthenticatedAdminAdministradoresRoute
+  AuthenticatedAdminEstadisticasRoute: typeof AuthenticatedAdminEstadisticasRoute
   AuthenticatedAdminOperariosRoute: typeof AuthenticatedAdminOperariosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminOrdenIdRoute: typeof AuthenticatedAdminOrdenIdRoute
@@ -254,6 +275,7 @@ interface AuthenticatedAdminRouteChildren {
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAdministradoresRoute:
     AuthenticatedAdminAdministradoresRoute,
+  AuthenticatedAdminEstadisticasRoute: AuthenticatedAdminEstadisticasRoute,
   AuthenticatedAdminOperariosRoute: AuthenticatedAdminOperariosRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminOrdenIdRoute: AuthenticatedAdminOrdenIdRoute,

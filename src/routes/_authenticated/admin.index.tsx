@@ -3,19 +3,21 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import {
   assignOrder,
   createOrder,
   deleteOrder,
   listOperarios,
   listOrdersAdmin,
+  updateOrder,
 } from "@/lib/admin.functions";
 import {
   PRIORITY_CLASS,
   PRIORITY_LABEL,
   STATUS_CLASS,
   STATUS_LABEL,
+  formatCurrency,
   formatDateTime,
   groupByMonth,
   type Priority,
@@ -65,6 +67,7 @@ function AdminOrdersPage() {
   const assign = useServerFn(assignOrder);
   const remove = useServerFn(deleteOrder);
   const create = useServerFn(createOrder);
+  const update = useServerFn(updateOrder);
 
   const ordersQuery = useQuery({ queryKey: ["admin-orders"], queryFn: () => fetchOrders() });
   const operariosQuery = useQuery({ queryKey: ["operarios"], queryFn: () => fetchOperarios() });
@@ -171,6 +174,7 @@ function AdminOrdersPage() {
                       <th className="px-4 py-3 font-medium">Estado</th>
                       <th className="px-4 py-3 font-medium">Prioridad</th>
                       <th className="px-4 py-3 font-medium">Operario</th>
+                      <th className="px-4 py-3 font-medium">Coste</th>
                       <th className="px-4 py-3" />
                     </tr>
                   </thead>
@@ -184,6 +188,7 @@ function AdminOrdersPage() {
                             className="font-semibold hover:underline"
                           >
                             {order.client_name}
+                            {order.unit ? ` · ${order.unit}` : ""}
                           </Link>
                           <p className="text-xs text-muted-foreground">{order.address}</p>
                         </td>
@@ -227,18 +232,31 @@ function AdminOrdersPage() {
                             </SelectContent>
                           </Select>
                         </td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            type="button"
-                            aria-label="Eliminar orden"
-                            className="text-muted-foreground hover:text-destructive"
-                            onClick={() => {
-                              if (confirm(`¿Eliminar la orden de ${order.client_name}?`))
-                                deleteMutation.mutate(order.id);
-                            }}
-                          >
-                            <Trash2 className="size-4" />
-                          </button>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {order.cost != null ? formatCurrency(order.cost) : "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-3">
+                            <EditOrderDialog
+                              order={order}
+                              onSave={async (payload) => {
+                                await update({ data: { id: order.id, ...payload } });
+                                invalidate();
+                                toast.success("Orden actualizada");
+                              }}
+                            />
+                            <button
+                              type="button"
+                              aria-label="Eliminar orden"
+                              className="text-muted-foreground hover:text-destructive"
+                              onClick={() => {
+                                if (confirm(`¿Eliminar la orden de ${order.client_name}?`))
+                                  deleteMutation.mutate(order.id);
+                              }}
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -267,6 +285,7 @@ function CreateOrderDialog({
   onCreate: (payload: {
     clientName: string;
     address: string;
+    unit?: string;
     contactPhone?: string;
     description: string;
     priority: "baja" | "media" | "alta";
@@ -278,6 +297,7 @@ function CreateOrderDialog({
   const [selectedClient, setSelectedClient] = useState<string>("__new__");
   const [clientName, setClientName] = useState("");
   const [address, setAddress] = useState("");
+  const [unit, setUnit] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"baja" | "media" | "alta">("media");
@@ -289,6 +309,7 @@ function CreateOrderDialog({
     setSelectedClient("__new__");
     setClientName("");
     setAddress("");
+    setUnit("");
     setContactPhone("");
     setDescription("");
     setPriority("media");
@@ -313,6 +334,7 @@ function CreateOrderDialog({
       await onCreate({
         clientName,
         address,
+        ...(unit.trim() ? { unit: unit.trim() } : {}),
         ...(contactPhone ? { contactPhone } : {}),
         description,
         priority,
@@ -370,6 +392,15 @@ function CreateOrderDialog({
             <Label htmlFor="address">Dirección</Label>
             <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="unit">Piso / unidad (opcional)</Label>
+            <Input
+              id="unit"
+              placeholder="3ºA"
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+            />
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="contactPhone">Teléfono de contacto</Label>
@@ -421,6 +452,176 @@ function CreateOrderDialog({
           </div>
           <Button type="submit" className="w-full" disabled={pending}>
             {pending ? "Creando…" : "Crear orden"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type EditableOrder = {
+  client_name: string;
+  address: string;
+  unit: string | null;
+  contact_phone: string | null;
+  description: string;
+  priority: string;
+  scheduled_at: string;
+};
+
+function toLocalInputValue(iso: string): string {
+  const date = new Date(iso);
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60 * 1000);
+  return local.toISOString().slice(0, 16);
+}
+
+function EditOrderDialog({
+  order,
+  onSave,
+}: {
+  order: EditableOrder;
+  onSave: (payload: {
+    clientName: string;
+    address: string;
+    unit?: string;
+    contactPhone?: string;
+    description: string;
+    priority: "baja" | "media" | "alta";
+    scheduledAt: string;
+  }) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [clientName, setClientName] = useState(order.client_name);
+  const [address, setAddress] = useState(order.address);
+  const [unit, setUnit] = useState(order.unit ?? "");
+  const [contactPhone, setContactPhone] = useState(order.contact_phone ?? "");
+  const [description, setDescription] = useState(order.description);
+  const [priority, setPriority] = useState<"baja" | "media" | "alta">(
+    order.priority as "baja" | "media" | "alta",
+  );
+  const [scheduledAt, setScheduledAt] = useState(toLocalInputValue(order.scheduled_at));
+  const [pending, setPending] = useState(false);
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setPending(true);
+    try {
+      await onSave({
+        clientName,
+        address,
+        ...(unit.trim() ? { unit: unit.trim() } : {}),
+        ...(contactPhone ? { contactPhone } : {}),
+        description,
+        priority,
+        scheduledAt: new Date(scheduledAt).toISOString(),
+      });
+      setOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Error al actualizar la orden");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (next) {
+          setClientName(order.client_name);
+          setAddress(order.address);
+          setUnit(order.unit ?? "");
+          setContactPhone(order.contact_phone ?? "");
+          setDescription(order.description);
+          setPriority(order.priority as "baja" | "media" | "alta");
+          setScheduledAt(toLocalInputValue(order.scheduled_at));
+        }
+        setOpen(next);
+      }}
+    >
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          aria-label="Editar orden"
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <Pencil className="size-4" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Editar orden de trabajo</DialogTitle>
+        </DialogHeader>
+        <form className="space-y-4" onSubmit={submit}>
+          <div className="space-y-2">
+            <Label htmlFor="edit-clientName">Cliente</Label>
+            <Input
+              id="edit-clientName"
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-address">Dirección</Label>
+            <Input
+              id="edit-address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-unit">Piso / unidad (opcional)</Label>
+            <Input id="edit-unit" placeholder="3ºA" value={unit} onChange={(e) => setUnit(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-contactPhone">Teléfono de contacto</Label>
+              <Input
+                id="edit-contactPhone"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                inputMode="tel"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-priority">Prioridad</Label>
+              <Select value={priority} onValueChange={(v) => setPriority(v as "baja" | "media" | "alta")}>
+                <SelectTrigger id="edit-priority">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="baja">Baja</SelectItem>
+                  <SelectItem value="media">Media</SelectItem>
+                  <SelectItem value="alta">Alta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-scheduledAt">Fecha y hora</Label>
+            <Input
+              id="edit-scheduledAt"
+              type="datetime-local"
+              value={scheduledAt}
+              onChange={(e) => setScheduledAt(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-description">Descripción de la avería</Label>
+            <Textarea
+              id="edit-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+              rows={3}
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={pending}>
+            {pending ? "Guardando…" : "Guardar cambios"}
           </Button>
         </form>
       </DialogContent>

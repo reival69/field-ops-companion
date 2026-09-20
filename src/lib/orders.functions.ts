@@ -121,7 +121,7 @@ export const getOrderDetail = createServerFn({ method: "GET" })
 
 export const updateOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { id: string; status: WorkOrderStatus; note?: string }) => data)
+  .inputValidator((data: { id: string; status: WorkOrderStatus; note?: string; cost?: number }) => data)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const patch: {
@@ -129,11 +129,13 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
       started_at?: string;
       finished_at?: string;
       closing_note?: string;
+      cost?: number;
     } = { status: data.status };
     if (data.status === "en_curso") patch.started_at = new Date().toISOString();
     if (data.status === "finalizada") {
       patch.finished_at = new Date().toISOString();
       if (data.note) patch.closing_note = data.note;
+      if (data.cost !== undefined) patch.cost = data.cost;
     }
 
     const { error } = await supabase.from("work_orders").update(patch).eq("id", data.id);
